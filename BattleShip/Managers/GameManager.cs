@@ -1,9 +1,10 @@
-﻿using System;
+﻿using BattleShip.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace BattleShip
+namespace BattleShip.Managers
 {
     public class GameManager
     {
@@ -32,9 +33,6 @@ namespace BattleShip
 
         public void DrawBoard()
         {
-            // I == 1 2 3 4
-            // J == A B C D
-
             // Skriver ut bokstäver i toppen
             Console.Write("\t ");
             for (int i = 0; i < Letters.Length; i++)
@@ -158,14 +156,6 @@ namespace BattleShip
 
         }
 
-
-
-
-        public void testToDraw(int x, int y)
-        {
-            grid[x, y] = "V";
-            DrawBoard();
-        }
 
 
     }

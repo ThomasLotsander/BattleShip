@@ -1,8 +1,9 @@
-﻿using System;
+﻿using BattleShip.Model;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace BattleShip
+namespace BattleShip.Managers
 {
     public class ShipManager
     {

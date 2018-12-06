@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BattleShip.Managers;
+using BattleShip.Model;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -14,10 +16,10 @@ namespace BattleShip
             GameManager gameManager = new GameManager(ships);
             gameManager.SetupGame();
 
-            gameManager.PlaceShip(ships[0], 1, 1, "V"); // Length 5
-            gameManager.PlaceShip(ships[1], 1, 3, "V"); // Length 4
-            gameManager.PlaceShip(ships[2], 1, 5, "V"); // Length 3
-            gameManager.PlaceShip(ships[3], 1, 7, "V"); // Length 3
+            gameManager.PlaceShip(ships[0], 2, 2, "V"); // Length 5
+            gameManager.PlaceShip(ships[1], 1, 3, "H"); // Length 4
+            gameManager.PlaceShip(ships[2], 6, 5, "V"); // Length 3
+            gameManager.PlaceShip(ships[3], 8, 7, "H"); // Length 3
             gameManager.PlaceShip(ships[4], 1, 9, "V"); // Length 2
 
             gameManager.DrawBoard();
