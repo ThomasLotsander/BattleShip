@@ -13,45 +13,26 @@ namespace BattleShip
             ShipManager shipManager = new ShipManager();
             List<Ship> ships = shipManager.CreateShip();
 
-            GameManager gameManager = new GameManager(ships);
-            gameManager.SetupGame();
+            GameManager oceanGrid = new GameManager(ships);
+            GameManager targetGrid = new GameManager();
+            targetGrid.SetupGame();
 
-            gameManager.PlaceShip(ships[0], 2, 2, "V"); // Length 5
-            gameManager.PlaceShip(ships[1], 1, 3, "H"); // Length 4
-            gameManager.PlaceShip(ships[2], 6, 5, "V"); // Length 3
-            gameManager.PlaceShip(ships[3], 8, 7, "H"); // Length 3
-            gameManager.PlaceShip(ships[4], 1, 9, "V"); // Length 2
 
-            gameManager.DrawBoard();
+            Console.Write("Spelarens namn: ");
+            string name = Console.ReadLine();
 
             while (true)
             {
-                Console.WriteLine("Skjut");
-                string shot = Console.ReadLine();
+                Console.Write("Text : ");
+                Console.ReadLine();
 
-                var shot2 = TrimShot(shot.ToUpper());
-                gameManager.Fire(shot2[0], shot2[1]);
+                Console.Write("Text : ");
+                Console.ReadLine();
 
-                gameManager.DrawBoard();
+                
+                oceanGrid.DrawBoard();
+                targetGrid.DrawBoard();
             }
         }
-
-
-        public static int[] TrimShot(string str)
-        {
-            char verticalPos = str[5];
-            char horizontalPos = str[6];
-
-            var ascii = Convert.ToByte(verticalPos) - 64;
-
-            int[] pos = new int[] { horizontalPos - 48, ascii };
-
-            return pos;
-        }
-
-
-
-
-
     }
 }

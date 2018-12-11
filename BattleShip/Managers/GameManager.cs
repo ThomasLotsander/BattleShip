@@ -14,9 +14,23 @@ namespace BattleShip.Managers
 
         List<Ship> ships;
 
+        int cursorLeft;
+        int cursorTop;
+
+        public GameManager() { }
         public GameManager(List<Ship> ships)
         {
             this.ships = ships;
+
+            SetupGame();
+
+            PlaceShip(ships[0], 2, 2, "V"); // Length 5
+            PlaceShip(ships[1], 1, 3, "H"); // Length 4
+            PlaceShip(ships[2], 6, 5, "V"); // Length 3
+            PlaceShip(ships[3], 8, 7, "H"); // Length 3
+            PlaceShip(ships[4], 1, 9, "V"); // Length 2
+
+            DrawBoard();
         }
 
         public void SetupGame()
@@ -31,8 +45,16 @@ namespace BattleShip.Managers
             }
         }
 
+        
+
+        
+
         public void DrawBoard()
         {
+            cursorLeft = Console.CursorLeft;
+            cursorTop = Console.CursorTop;
+            Console.SetCursorPosition(0, 0);
+
             // Skriver ut bokstäver i toppen
             Console.Write("\t ");
             for (int i = 0; i < Letters.Length; i++)
@@ -49,7 +71,7 @@ namespace BattleShip.Managers
                 {
                     Console.Write(" | ");
                     // Det är en båt på platsen
-                    if (grid[j, i] == "1" || grid[j, i] == "2" || grid[j, i] == "3" || grid[j, i] == "4" || grid[j, i] == "5")
+                    if (grid[j, i] == "241" || grid[j, i] == "242" || grid[j, i] == "243" || grid[j, i] == "244" || grid[j, i] == "245")
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.Write("#");
@@ -70,18 +92,42 @@ namespace BattleShip.Managers
                         Console.ResetColor();
                     }
                     else
-                        //Console.Write(" ");
                         Console.Write(grid[j, i]);
 
                 }
                 Console.Write(" | ");
                 Console.WriteLine();
+
+
             }
             Console.WriteLine("\t  ----------------------------------------");
 
+            if (cursorTop == 0)
+                cursorTop = Console.CursorTop;
+
+            Console.SetCursorPosition(cursorLeft, cursorTop);
+
         }
 
-        public bool Fire(int vertivcalPos, int horizontalPos)
+        public void MarkTargetGrid(int vertivcalPos, int horizontalPos)
+        {
+            // Markerar mina skott på egna brädet
+            // Ändrar positionen till 0 indexering för att anpassa Arrayerna
+            vertivcalPos = vertivcalPos - 1;
+            horizontalPos = horizontalPos - 1;
+
+            // Det är en tom ruta men ingen träff
+            if (grid[horizontalPos, vertivcalPos] == " ")
+            {
+                grid[horizontalPos, vertivcalPos] = "X";
+            }
+            else
+            {
+                grid[horizontalPos, vertivcalPos] = "H";
+            }
+        }
+
+        public string Fire(int vertivcalPos, int horizontalPos)
         {
             vertivcalPos = vertivcalPos - 1;
             horizontalPos = horizontalPos - 1;
@@ -91,28 +137,30 @@ namespace BattleShip.Managers
                 // Spelaren får ett nytt försök
                 if (grid[horizontalPos, vertivcalPos] == "X")
                 {
-                    return false;
+                    return StatusCode.GetStatusCode(501);
                 }
                 // Det är en tom ruta men ingen träff
                 else if (grid[horizontalPos, vertivcalPos] == " ")
                 {
                     grid[horizontalPos, vertivcalPos] = "X";
-                    return false;
+                    return StatusCode.GetStatusCode(230);
                 }
                 // Träff
                 else
                 {
                     string id = grid[horizontalPos, vertivcalPos];
                     Ship ship = ships.FirstOrDefault(c => c.ID == id);
+                    grid[horizontalPos, vertivcalPos] = "H";
 
                     ship.Lenght -= 1;
                     if (ship.Lenght <= 0)
                     {
                         ship.Sunk = true;
-                        Console.WriteLine("You sunk my battleship: " + ship.Name);
+                        return StatusCode.GetStatusCode(int.Parse(id) + 10);
                     }
-                    grid[horizontalPos, vertivcalPos] = "H";
-                    return true;
+                    return StatusCode.GetStatusCode(int.Parse(id));
+
+
                 }
             }
             catch (IndexOutOfRangeException ex)
@@ -125,6 +173,19 @@ namespace BattleShip.Managers
                 Console.WriteLine(ex.Message);
                 throw;
             }
+        }
+
+        public int[] TrimShot(string str)
+        {
+            str = str.ToUpper();
+            char verticalPos = str[5];
+            char horizontalPos = str[6];
+
+            var ascii = Convert.ToByte(verticalPos) - 64;
+
+            int[] pos = new int[] { horizontalPos - 48, ascii };
+
+            return pos;
         }
 
         public bool PlaceShip(Ship ship, int VerticalStartPos, int HorizontalStartPos, string direction)
