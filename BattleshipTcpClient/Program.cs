@@ -6,8 +6,6 @@ namespace BattleshipTcpClient
     {
         static void Main(string[] args)
         {
-            //BsClient bsClient = new BsClient();
-            //bsClient.Host();
         }
     }
 }

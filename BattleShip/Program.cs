@@ -14,8 +14,8 @@ namespace BattleShip
             List<Ship> ships = shipManager.CreateShip();
 
             GameManager oceanGrid = new GameManager(ships);
-            GameManager targetGrid = new GameManager();
-            targetGrid.SetupGame();
+            //GameManager targetGrid = new GameManager();
+            //targetGrid.SetupGame();
 
 
             Console.Write("Spelarens namn: ");
@@ -23,15 +23,13 @@ namespace BattleShip
 
             while (true)
             {
-                Console.Write("Text : ");
-                Console.ReadLine();
 
                 Console.Write("Text : ");
-                Console.ReadLine();
+                var fire = oceanGrid.TrimShot(Console.ReadLine());
 
-                
+                Console.WriteLine(fire);
                 oceanGrid.DrawBoard();
-                targetGrid.DrawBoard();
+                //targetGrid.DrawBoard();
             }
         }
     }

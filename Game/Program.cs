@@ -11,20 +11,19 @@ namespace Game
     {
         static void Main(string[] args)
         {
-            // Set up ships 
-            ShipManager shipManager = new ShipManager();
-            List<Ship> ships = shipManager.CreateShip();
-
-            GameManager oceanGrid = new GameManager(ships);
-            GameManager targetGrid = new GameManager();
-
-
-            Console.Write("Spelarens namn: ");
-            string name = Console.ReadLine();
-
-         
+            
             while (true)
             {
+                ShipManager shipManager = new ShipManager();
+                List<Ship> ships = shipManager.CreateShip();
+
+                GameManager oceanGrid = new GameManager(ships);
+                GameManager targetGrid = new GameManager();
+
+
+                Console.Write("Spelarens namn: ");
+                string name = Console.ReadLine();
+
                 Console.WriteLine("Ange host:");
                 var host = Console.ReadLine();
                 Console.WriteLine("Ange port:");

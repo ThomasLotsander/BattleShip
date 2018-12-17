@@ -10,7 +10,6 @@ namespace BattleShip.Managers
     {
         string[,] grid = new string[10, 10];
         string[] Letters = new string[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" };
-        string[] ShipsIDs = new string[] { "1", "2", "3", "4", "5" };
 
         List<Ship> ships;
 
@@ -24,7 +23,7 @@ namespace BattleShip.Managers
 
             SetupGame();
 
-            PlaceShip(ships[0], 2, 2, "V"); // Length 5
+            PlaceShip(ships[0], 1, 1, "V"); // Length 5
             PlaceShip(ships[1], 1, 3, "H"); // Length 4
             PlaceShip(ships[2], 6, 5, "V"); // Length 3
             PlaceShip(ships[3], 8, 7, "H"); // Length 3
@@ -44,10 +43,6 @@ namespace BattleShip.Managers
                 }
             }
         }
-
-        
-
-        
 
         public void DrawBoard()
         {
@@ -70,8 +65,8 @@ namespace BattleShip.Managers
                 for (int j = 0; j < 10; j++)
                 {
                     Console.Write(" | ");
-                    // Det är en båt på platsen
-                    if (grid[j, i] == "241" || grid[j, i] == "242" || grid[j, i] == "243" || grid[j, i] == "244" || grid[j, i] == "245")
+
+                    if (int.TryParse(grid[j, i], out int shipId))
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.Write("#");
@@ -127,7 +122,7 @@ namespace BattleShip.Managers
             }
         }
 
-        public string Fire(int vertivcalPos, int horizontalPos)
+        private string Fire(int vertivcalPos, int horizontalPos)
         {
             vertivcalPos = vertivcalPos - 1;
             horizontalPos = horizontalPos - 1;
@@ -137,7 +132,7 @@ namespace BattleShip.Managers
                 // Spelaren får ett nytt försök
                 if (grid[horizontalPos, vertivcalPos] == "X")
                 {
-                    return StatusCode.GetStatusCode(501);
+                    return StatusCode.GetStatusCode(500);
                 }
                 // Det är en tom ruta men ingen träff
                 else if (grid[horizontalPos, vertivcalPos] == " ")
@@ -156,7 +151,13 @@ namespace BattleShip.Managers
                     if (ship.Lenght <= 0)
                     {
                         ship.Sunk = true;
-                        return StatusCode.GetStatusCode(int.Parse(id) + 10);
+                        // Kollar något skäpp fortfarande flyter
+                        if (ships.Any(c => c.Sunk == false))
+                        {
+                            return StatusCode.GetStatusCode(int.Parse(id) + 10);
+                        }
+                        else
+                            return StatusCode.GetStatusCode(260);
                     }
                     return StatusCode.GetStatusCode(int.Parse(id));
 
@@ -165,27 +166,47 @@ namespace BattleShip.Managers
             }
             catch (IndexOutOfRangeException ex)
             {
-                Console.WriteLine(ex.Message);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                throw;
+                return StatusCode.GetStatusCode(500);
             }
         }
 
-        public int[] TrimShot(string str)
+        public string TrimShot(string firePos)
         {
-            str = str.ToUpper();
-            char verticalPos = str[5];
-            char horizontalPos = str[6];
+            firePos = firePos.ToUpper();
 
-            var ascii = Convert.ToByte(verticalPos) - 64;
+            // Kolla om bokstaven är en bokstav mellan A - J
+            int verticalPos = Convert.ToByte(firePos[5]) - 64;
+            if (verticalPos > 0 && verticalPos < 11)
+            {
+                // Kolla om pos 6 är en siffra mellan 1 - 10
+                bool posSixIsNumber = int.TryParse(firePos[6].ToString(), out int horizontalPos);
 
-            int[] pos = new int[] { horizontalPos - 48, ascii };
+                /* 
+                 * Kolla om det finns en siffra i possition 7
+                 * Kolla om den siffran är = 0
+                 * Om allt stämmer gör om HorizontalPos till det nummret
+                 */
+                if (posSixIsNumber)
+                {
+                    if (firePos.Length >= 8)
+                    {
+                        bool posEightIsNumber = int.TryParse(firePos[7].ToString(), out int zero);
+                        if (posEightIsNumber)
+                        {
+                            if (zero == 0)
+                            {
+                                horizontalPos = int.Parse(firePos.Substring(6, 2));
+                                return Fire(horizontalPos, verticalPos);
+                            }
+                            return StatusCode.GetStatusCode(500);
+                        }
+                    }
+                    return Fire(horizontalPos, verticalPos);
+                }
+            }
 
-            return pos;
+            return StatusCode.GetStatusCode(500);
+
         }
 
         public bool PlaceShip(Ship ship, int VerticalStartPos, int HorizontalStartPos, string direction)

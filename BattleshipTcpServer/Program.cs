@@ -6,8 +6,7 @@ namespace BattleshipTcpServer
     {
         static void Main(string[] args)
         {
-            //BsServer bsServer = new BsServer();
-            //bsServer.Listen();
+            
         }
     }
 }

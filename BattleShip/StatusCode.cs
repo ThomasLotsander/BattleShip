@@ -12,7 +12,7 @@ namespace BattleShip
             switch (code)
             {
                 case 210:
-                    response = "210 BATTLESHIP / 1.0";
+                    response = "210 BATTLESHIP/1.0";
                     break;
 
                 case 221:
@@ -58,7 +58,7 @@ namespace BattleShip
                     response = "260 You win!";
                     break;
                 case 270:
-                    response = "270 Connection closed";
+                    response = "270 Get utta here!";
                     break;
                 case 500:
                     response = "500 Syntax error";

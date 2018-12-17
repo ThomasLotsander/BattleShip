@@ -6,76 +6,169 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace BattleshipTcpClient
 {
     public class BsClient
     {
+        int numberOfErrors = 0;
+        bool serverAwnserIsOk = false;
         public void Host(string host, int port, string playerName, GameManager targetGrid, GameManager oceanGrid)
         {
-         
+
             using (var client = new TcpClient(host, port))
             using (var networkStream = client.GetStream())
             using (StreamReader reader = new StreamReader(networkStream, Encoding.UTF8))
             using (var writer = new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true })
             {
-
                 while (client.Connected)
                 {
-                    var receivedCommand = reader.ReadLine().ToUpper();
+                    if (!client.Connected) break;
+
+                    string receivedCommand = reader.ReadLineAsync().Result.ToUpper();
+                    bool isStatusCode = int.TryParse(receivedCommand.Split(' ')[0], out int receivedStatusCode);
                     Console.WriteLine($"Mottaget: {receivedCommand}");
 
-                    if (receivedCommand.Equals(StatusCode.GetStatusCode(210)))
+                    // Välkomstmeddelande
+                    if (receivedStatusCode == 210)
                     {
+                        serverAwnserIsOk = true;
                         writer.WriteLine("HELO " + playerName);
                     }
 
-                    else if (receivedCommand.Contains("220"))
+
+
+                    // Om servern inte har svart med ett välkomstmeddlenade ska förbindelsen brytas
+                    else if (serverAwnserIsOk == false)
                     {
-                        Console.WriteLine("Skriv START för att starta spelet");
+                        writer.WriteLine(StatusCode.GetStatusCode(501));
+                        Environment.Exit(1);
+                    }
+
+                    // Om det kommer en 500 status-kod
+                    else if (receivedStatusCode == 500 || receivedStatusCode == 501)
+                    {
+                        Console.Write("Din tur igen -->");
                         writer.WriteLine(Console.ReadLine());
                     }
-                    else if (receivedCommand.Contains("221"))
+
+                    // Klienten har vunnit
+                    else if (receivedStatusCode == 260)
                     {
-                        Console.Write("> ");
+                        writer.WriteLine("QUIT");
+                    }
+
+                    else if (receivedStatusCode == 270)
+                        break;
+
+                    // Det är ett HELLO Meddelande 
+                    else if (receivedStatusCode == 220)
+                    {
+                        var sendMessage = "";
+                        do
+                        {
+                            Console.WriteLine("Skriv START för att starta spelet");
+                            sendMessage = Console.ReadLine().ToUpper();
+                            if (sendMessage == "QUIT")
+                                Environment.Exit(1);
+
+                        } while (sendMessage != "START");
+                        writer.WriteLine(sendMessage);
+                    }
+
+                    // Clienten börjar
+                    else if (receivedStatusCode == 221)
+                    {
+                        Console.Write("--> ");
                         var sendCommand = Console.ReadLine();
                         writer.WriteLine(sendCommand);
 
                     }
-                    else if (receivedCommand.Contains("FIRE", StringComparison.InvariantCultureIgnoreCase))
+
+                    // Servern försöker skjuta
+                    else if (receivedCommand.Split(' ')[0].Equals("FIRE", StringComparison.InvariantCultureIgnoreCase))
                     {
+                        var response = oceanGrid.TrimShot(receivedCommand);
+                        bool isError = CheckForError(response);
+                        writer.WriteLine(response);
 
-                        var shot = oceanGrid.TrimShot(receivedCommand);
-                        writer.WriteLine(oceanGrid.Fire(shot[0], shot[1]));
-                        // Markera egan skott på Targetgrid
-
-                        oceanGrid.DrawBoard();
-
-                        Console.Write("> ");
-                        var sendCommand = Console.ReadLine();
-                        writer.WriteLine(sendCommand);
-
-                        if (sendCommand == "QUIT")
-                            Environment.Exit(1);
-
-                        if (sendCommand.Contains("FIRE", StringComparison.InvariantCultureIgnoreCase))
+                        if (numberOfErrors > 3)
                         {
-                            var myShot = targetGrid.TrimShot(sendCommand);
-                            targetGrid.MarkTargetGrid(myShot[0], myShot[1]);
-                            targetGrid.DrawBoard();
+                            Console.Clear();
+                            Console.WriteLine("Two many errors");
+                            break;
                         }
 
+                        oceanGrid.DrawBoard();
+                        if (!isError)
+                        {
+                            Console.Write("> ");
+                            var sendCommand = Console.ReadLine();
+                            writer.WriteLine(sendCommand);
+
+                            if (sendCommand == "QUIT")
+                                break;
+
+                            // Markera på egen tavla
+                            if (sendCommand.Contains("FIRE", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                //var myShot = targetGrid.TrimShot(sendCommand);
+                                //targetGrid.MarkTargetGrid(myShot[0], myShot[1]);
+                                //targetGrid.DrawBoard();
+                            }
+                        }
+
+                    }
+                    else if (receivedCommand.Contains("HELP", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        Console.Write("Din tur igen -->");
+                        writer.WriteLine(Console.ReadLine());
+                    }
+
+
+                    // Om det skickas en tom sträng
+                    else if (string.IsNullOrWhiteSpace(receivedCommand))
+                    {
+                        writer.WriteLine(StatusCode.GetStatusCode(500));
+                        numberOfErrors++;
+                    }
+
+                    else
+                    {
+                        if (!isStatusCode)
+                        {
+                            writer.WriteLine(StatusCode.GetStatusCode(500));
+                            numberOfErrors++;
+                        }
 
                     }
 
-                    if (!client.Connected) break;
-
-
-
+                    if (numberOfErrors > 3)
+                    {
+                        Console.Clear();
+                        break;
+                    }
                 };
 
             }
 
         }
+
+        private bool CheckForError(string command)
+        {
+            if (command.Split(' ')[0] == "500" || command.Split(' ')[0] == "501")
+            {
+                numberOfErrors++;
+                return true;
+            }
+            else
+            {
+                numberOfErrors = 0;
+                return false;
+            }
+        }
+
+
     }
 }
